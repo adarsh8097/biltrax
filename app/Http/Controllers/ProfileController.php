@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\User;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,11 +51,13 @@ class ProfileController extends Controller
 
     public function selfDelete(Request $request): RedirectResponse
     {
+        $user = $request->user();
+
+        abort_unless($user?->isUser(), 403, 'Only standard users can delete their own accounts.');
+
         $request->validate([
             'password' => ['required', 'current_password'],
         ]);
-
-        $user = $request->user();
 
         Auth::logout();
 

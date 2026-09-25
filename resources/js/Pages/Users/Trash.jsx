@@ -1,7 +1,23 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 
 export default function Trash({ users }) {
+    const restoreUser = (user) => {
+        if (confirm(`Restore ${user.name}?`)) {
+            router.post(route('users.restore', user.id), {}, {
+                preserveScroll: true,
+            });
+        }
+    };
+
+    const forceDeleteUser = (user) => {
+        if (confirm(`Permanently delete ${user.name}? This cannot be undone.`)) {
+            router.delete(route('users.force-delete', user.id), {
+                preserveScroll: true,
+            });
+        }
+    };
+
     return (
         <AuthenticatedLayout
             header={<h2 className="text-xl font-semibold text-gray-800">Trash / Archive</h2>}
@@ -21,7 +37,23 @@ export default function Trash({ users }) {
                                             <div className="font-medium text-gray-900">{user.name}</div>
                                             <div className="text-sm text-gray-600">{user.email}</div>
                                         </div>
-                                        <div className="text-sm text-gray-500">{user.deleted_at}</div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-sm text-gray-500">{user.deleted_at}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => restoreUser(user)}
+                                                className="rounded bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                                            >
+                                                Restore
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => forceDeleteUser(user)}
+                                                className="rounded bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+                                            >
+                                                Delete Permanently
+                                            </button>
+                                        </div>
                                     </div>
                                 ))
                             )}

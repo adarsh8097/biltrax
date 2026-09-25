@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -91,6 +92,10 @@ class UserController extends Controller
 
         $managedBy = $validated['managed_by'] ?? ($request->user()->isAdmin() ? $request->user()->id : null);
 
+        $avatarPath = $request->hasFile('avatar')
+            ? $request->file('avatar')->store('avatars', 'public')
+            : null;
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -98,6 +103,7 @@ class UserController extends Controller
             'role' => $validated['role'],
             'status' => $validated['status'],
             'managed_by' => $managedBy,
+            'avatar' => $avatarPath,
         ]);
 
         return redirect()->route('users.index')->with('success', 'User created successfully.');
@@ -114,6 +120,14 @@ class UserController extends Controller
             'status' => ['required', Rule::in([User::STATUS_ACTIVE, User::STATUS_SUSPENDED])],
             'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+
+            $user->avatar = $request->file('avatar')->store('avatars', 'public');
+        }
 
         $user->fill([
             'name' => $validated['name'],

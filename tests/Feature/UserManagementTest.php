@@ -112,6 +112,20 @@ class UserManagementTest extends TestCase
         $this->assertSoftDeleted('users', ['id' => $user->id]);
     }
 
+    public function test_admin_and_super_admin_cannot_self_delete(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $superAdmin = User::factory()->create(['role' => 'super_admin', 'status' => 'active']);
+
+        $this->actingAs($admin)
+            ->delete(route('profile.self-delete'), ['password' => 'password'])
+            ->assertStatus(403);
+
+        $this->actingAs($superAdmin)
+            ->delete(route('profile.self-delete'), ['password' => 'password'])
+            ->assertStatus(403);
+    }
+
     public function test_user_cannot_delete_another_user_profile(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);

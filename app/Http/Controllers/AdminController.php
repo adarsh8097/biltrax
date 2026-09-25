@@ -25,13 +25,16 @@ class AdminController extends Controller
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
+            ->when($request->filled('date_from'), fn ($query) => $query->whereDate('created_at', '>=', $request->input('date_from')))
+            ->when($request->filled('date_to'), fn ($query) => $query->whereDate('created_at', '<=', $request->input('date_to')))
             ->orderBy($request->input('sort', 'created_at'), $request->input('direction', 'desc'))
             ->paginate(10)
             ->withQueryString();
 
         return Inertia::render('Admin/Index', [
             'admins' => $admins,
-            'filters' => $request->only(['search', 'sort', 'direction']),
+            'filters' => $request->only(['search', 'status', 'date_from', 'date_to', 'sort', 'direction']),
         ]);
     }
 
